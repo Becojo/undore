@@ -25,10 +25,11 @@
     "test": "test"
   },
   "dependencies": {
-    "immutable": "^3.6.2"
+    "immutable": "~3.6.2"
   },
   "devDependencies": {
     "jsverify": "~0.5.1",
-    "quickcheck": "~0.0.4"
+    "quickcheck": "~0.0.4",
+    "mocha": "~2.1.0"
   }
 }
