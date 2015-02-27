@@ -90,9 +90,11 @@ undore.undo = function(self) {
   return self.withMutations(function(self) {
     var history = self.get('history');
 
-    self.set('redos', self.get('redos').push(self.get('state')))
-    self.set('state', history.peek());
-    self.set('history', history.pop());
+    if(history.count()) {
+      self.set('redos', self.get('redos').push(self.get('state')))
+      self.set('state', history.peek());
+      self.set('history', history.pop());
+    }
   });
 };
 
@@ -103,14 +105,14 @@ undore.undo = function(self) {
  */
 undore.redo = function(self) {
   return self.withMutations(function(self) {
-    var state = self.get('redos').peek();
+    var redos = self.get('redos');
 
-    undore.saveHistory(self);
+    if(redos.count()) {
+      undore.saveHistory(self);
 
-    self.set('state', state)
-    self.update('redos', function(redos) {
-      return redos.pop();
-    });
+      self.set('state', redos.peek())
+      self.set('redos', redos.pop());
+    }
   });
 };
 
