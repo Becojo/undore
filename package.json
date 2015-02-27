@@ -1,6 +1,6 @@
 {
   "name": "undore",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Redo/Undo",
   "main": "index.js",
   "scripts": {
