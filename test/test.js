@@ -2,6 +2,8 @@
 var undore = require('../index.js');
 var jsc = require('jsverify');
 
+var genNatKvPairs = jsc.array(jsc.pair(jsc.nat, jsc.nat));
+
 describe('set', function() {
   jsc.property('contains', 'array nat', 'json', function(xs, val) {
     var initial = xs.reduce(function(s, x) {
@@ -38,6 +40,31 @@ describe('undo', function() {
     }, sets);
 
     return undos.get('state') == initial.get('state')
+  });
+
+  jsc.property('idempotenceWhenEmpty', genNatKvPairs, 'nat', function(init, n) {
+    var initial = undore(init);
+    var results = undore(init);
+
+    for(var i = 0; i < n; i++) {
+      results = undore.undo(results);
+    }
+
+    return initial.get('state').equals(results.get('state'));
+  });
+
+});
+
+describe('redo', function() {
+  jsc.property('idempotenceWhenEmpty', genNatKvPairs, 'nat', function(init, n) {
+    var initial = undore(init);
+    var results = undore(init);
+
+    for(var i = 0; i < n; i++) {
+      results = undore.redo(results);
+    }
+
+    return initial.get('state').equals(results.get('state'));
   });
 });
 
