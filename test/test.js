@@ -2,78 +2,74 @@
 var undore = require('../index.js');
 var jsc = require('jsverify');
 
-var genNatKvPairs = jsc.array(jsc.pair(jsc.nat, jsc.nat));
-
-describe('set', function() {
-  jsc.property('contains', 'array nat', 'json', function(xs, val) {
-    var initial = xs.reduce(function(s, x) {
-      return undore.set(s, x, val);
-    }, undore());
-
-    for(var i = 0; i < xs.length; i++) {
-      if(undore.get(initial, xs[i]) !== val) return false;
-    }
-
-    return true;
-  });
-});
-
-describe('delete', function() {
-  jsc.property('removed', 'json', 'json', function(k, v) {
-    var initial = undore();
-    var results = undore.delete(undore.set(initial, k, v), k)
-
-    return initial.get('state') == results.get('state');
+describe('get/set', function() {
+  jsc.property('get(set(x)) = x', 'json', function(value) {
+    return undore.get(undore.set(undore(null), value)) === value;
   });
 });
 
 describe('undo', function() {
+
+  // property: given an array of length n, apply n times `set` followed by 
+  //           at least n `undo` should yield the initial value
   jsc.property('initialState', 'array nat', function(xs) {
-    var initial = undore({})
+    var value = {};
+    var initial = undore(value)
 
     var sets = xs.reduce(function(s, x) {
-      return undore.set(s, x, Math.random());
+      return undore.set(s, x);
     }, initial);
 
-    var undos = xs.reduce(function(s) {
+    var undos = xs.reduce(function(s, _) {
       return undore.undo(s);
     }, sets);
 
-    return undos.get('state') == initial.get('state')
+    return undore.get(undos) === undore.get(initial) && 
+           undore.get(undos) === value;
   });
 
-  jsc.property('idempotenceWhenEmpty', genNatKvPairs, 'nat', function(init, n) {
-    var initial = undore(init);
-    var results = undore(init);
+  // property: undoing n times should yield the initial value when the undo 
+  //           stack is empty
+  jsc.property('idempotenceWhenEmpty', 'json', 'nat', function(value, n) {
+    var initial = undore(value);
+    var results = undore(value);
 
     for(var i = 0; i < n; i++) {
       results = undore.undo(results);
     }
 
-    return initial.get('state').equals(results.get('state'));
+    return undore.get(initial) === undore.get(results) && 
+           undore.get(results) === value;
   });
 
 });
 
 describe('redo', function() {
-  jsc.property('idempotenceWhenEmpty', genNatKvPairs, 'nat', function(init, n) {
-    var initial = undore(init);
-    var results = undore(init);
+
+  // property: for any positive n, redoing n times should yield the initial 
+  //           value when the redo stack is empty
+  jsc.property('idempotenceWhenEmpty', 'json', 'nat', function(value, n) {
+    var initial = undore(value);
+    var results = undore(value);
 
     for(var i = 0; i < n; i++) {
       results = undore.redo(results);
     }
 
-    return initial.get('state').equals(results.get('state'));
+    return undore.get(initial) === undore.get(results) && 
+           undore.get(results) === value;
   });
 });
 
 describe('undo/redo', function() {
-  jsc.property('inverse', 'nat', 'nat', function(k, v) {
-    var initial = undore.set(undore(), k, v);
+
+  // property: redo is the inverse operation of undo
+  jsc.property('inverse', 'json', 'json', function(x, y) {
+    var initial = undore.set(undore(x), y);
     var results = undore.redo(undore.undo(initial));
 
-    return initial.get('state') == results.get('state')
+    return undore.get(initial) === undore.get(results) && 
+           undore.get(results) === y;
   });
 });
 

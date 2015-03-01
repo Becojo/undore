@@ -2,15 +2,15 @@ var Immutable = require('immutable');
 
 /**
  * Initialize an Immutable.Map with three keys
- * - state: Immutable.Map that stores the current state
+ * - state: An object that represents the current state
  * - history: Immutable.Stack with all the changes made to the structure
  * - redos: Immutable.Stack with changes undone that can be redone
  *
- * undore :: Object -> undore
+ * undore :: value -> undore
  */
 function undore(object) {
   return Immutable.Map({ 
-    state: Immutable.Map(object), 
+    state: object,
     history: Immutable.Stack(), 
     redos: Immutable.Stack() 
   });
@@ -41,48 +41,30 @@ undore.clearRedos = function(self) {
 };
 
 /**
- * Get a key from the state
+ * Gets the current value
  *
- * get :: undore -> key -> value
+ * get :: undore -> value
  */
-undore.get = function(self, key) {
-  return self.getIn(['state', key]);
+undore.get = function(self) {
+  return self.get('state');
 };
 
 /**
- * Set a value at the given key
+ * Change the value and records the change in the history
  *
- * set :: undore -> key -> value -> undore
+ * set :: undore -> value -> undore
  */
-undore.set = function(self, key, value) {
+undore.set = function(self, value) {
   return self.withMutations(function(self) {
     undore.saveHistory(self);
     undore.clearRedos(self);
 
-    self.update('state', function(state) {
-      return state.set(key, value);
-    });
+    self.set('state', value);
   });
 };
 
 /**
- * Delete a value at the given key
- * 
- * set :: undore -> key -> undore
- */
-undore.delete = function(self, key) {
-  return self.withMutations(function(self) {
-    undore.saveHistory(self);
-    undore.clearRedos(self);
-
-    self.update('state', function(state) {
-      return state.delete(key);
-    });
-  });
-}
-
-/**
- * Undo the latest change
+ * Undo the latest change if any
  *
  * undo :: undore -> undore
  */
@@ -91,7 +73,7 @@ undore.undo = function(self) {
     var history = self.get('history');
 
     if(history.count()) {
-      self.set('redos', self.get('redos').push(self.get('state')))
+      self.set('redos', self.get('redos').push(self.get('state')));
       self.set('state', history.peek());
       self.set('history', history.pop());
     }
@@ -99,7 +81,7 @@ undore.undo = function(self) {
 };
 
 /**
- * Redo the latest undo
+ * Redo the latest undo if any
  *
  * undo :: undore -> undore
  */
