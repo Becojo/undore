@@ -9,10 +9,10 @@ var Immutable = require('immutable');
  * undore :: value -> undore
  */
 function undore(object) {
-  return Immutable.Map({ 
+  return Immutable.Map({
     state: object,
-    history: Immutable.Stack(), 
-    redos: Immutable.Stack() 
+    history: Immutable.Stack(),
+    redos: Immutable.Stack()
   });
 }
 
@@ -41,7 +41,7 @@ undore.clearRedos = function(self) {
 };
 
 /**
- * Gets the current value
+ * Get the current value
  *
  * get :: undore -> value
  */
@@ -64,6 +64,15 @@ undore.set = function(self, value) {
 };
 
 /**
+ * Update the state with a function of previous state to next state
+ *
+ * update :: undore -> (value -> value) -> undore
+ */
+undore.update = function(self, updater) {
+  return undore.set(self, updater(undore.get(self)));
+};
+
+/**
  * Undo the latest change if any
  *
  * undo :: undore -> undore
@@ -83,7 +92,7 @@ undore.undo = function(self) {
 /**
  * Redo the latest undo if any
  *
- * undo :: undore -> undore
+ * redo :: undore -> undore
  */
 undore.redo = function(self) {
   return self.withMutations(function(self) {
