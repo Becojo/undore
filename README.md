@@ -35,17 +35,26 @@ Constructor of an Undore instance. This instance is in fact an instance of `Immu
 
 - `state`: The most recent and valid version of the state
 - `history`: An `Immutable.Stack` that contains every past versions of the state.
-- `redos`: Also an `Immutable.Stack` with changes that were undone and could be redone.
+- `redos`: Also an `Immutable.Stack` with changes that were undone and may be redone.
 
 **Note**: Undore does not enforce the use of immutable object as its state.
 
 ### undore.set(undore, value) &rarr; undore
 
-Change the value and records the change in the history.
+Change the value and record the change in the history.
 
 ### undore.get(undore) &rarr; value
 
 Get the current value.
+
+### undore.update(undore, updater) &rarr; undore
+
+Update the state with a function of previous state to next state. These are equivalent:
+
+```javascript
+undore.set(myState, updater(undore.get(myState)))
+undore.update(myState, updater)
+```
 
 ### undore.undo(undore) &rarr; undore
 
@@ -53,7 +62,7 @@ Undo the latest change if any.
 
 ### undore.redo(undore) &rarr; undore
 
-Redo the latest undo if any
+Redo the latest undo if any.
 
 ## Demo
 
